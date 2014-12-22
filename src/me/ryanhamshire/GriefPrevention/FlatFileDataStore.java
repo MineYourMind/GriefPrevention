@@ -18,6 +18,14 @@
 
 package me.ryanhamshire.GriefPrevention;
 
+/*
+	MyM Changes for ClaimHistory
+	12/22/2014 - LucidTheStick
+*/
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
 import java.io.*;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -37,7 +45,7 @@ public class FlatFileDataStore extends DataStore
 			MyM Changes for ClaimHistory
 			12/22/2014 - LucidTheStick
 	*/
-	private final static String claimHistoryFilePath = dataLayerFolderPath + File.separator + "ClaimHistory";
+	private final static String claimHistoryFolderPath = dataLayerFolderPath + File.separator + "ClaimHistory";
 	
 	static boolean hasData()
 	{
@@ -814,7 +822,7 @@ public class FlatFileDataStore extends DataStore
 		try
 		{
 			//open the claim's file						
-			File claimHistoryFile = new File(claimHistoryDataFolderPath + File.separator + claimID);
+			File claimHistoryFile = new File(claimHistoryFolderPath + File.separator + claimID);
 			claimHistoryFile.createNewFile();
 			outStream = new BufferedWriter(new FileWriter(claimHistoryFile, true));
 			
@@ -841,5 +849,4 @@ public class FlatFileDataStore extends DataStore
 		}
 		catch(IOException exception) {}
 	}
-}
 }

@@ -839,8 +839,8 @@ public class GriefPrevention extends JavaPlugin
 			12/22/2014 - LucidTheStick
 		*/
 		//Which claim is command targeted at?
-		Claim claim = this.dataStore.getClaimAt(player.getLocation(), true /*ignore height*/, null);
-		if(claim != null)
+		Claim targetClaim = this.dataStore.getClaimAt(player.getLocation(), true /*ignore height*/, null);
+		if(targetClaim != null)
 		{
 			this.dataStore.writeClaimHistoryToStorage(claim, player, cmd, args);
 		}
