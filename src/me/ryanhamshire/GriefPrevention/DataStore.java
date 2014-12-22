@@ -1333,4 +1333,10 @@ public abstract class DataStore
         
         return claims;        
     }
+	
+	/*
+		MyM changes for ClaimHistory
+		12/22/2014 - LucidTheStick
+	*/
+	abstract void writeClaimHistoryToStorage(Claim claim);
 }

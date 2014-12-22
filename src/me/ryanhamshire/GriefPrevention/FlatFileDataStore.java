@@ -33,6 +33,11 @@ public class FlatFileDataStore extends DataStore
 	private final static String claimDataFolderPath = dataLayerFolderPath + File.separator + "ClaimData";
 	private final static String nextClaimIdFilePath = claimDataFolderPath + File.separator + "_nextClaimID";
 	private final static String schemaVersionFilePath = dataLayerFolderPath + File.separator + "_schemaVersion";
+	/*
+			MyM Changes for ClaimHistory
+			12/22/2014 - LucidTheStick
+	*/
+	private final static String claimHistoryFilePath = dataLayerFolderPath + File.separator + "ClaimHistory";
 	
 	static boolean hasData()
 	{
@@ -60,6 +65,17 @@ public class FlatFileDataStore extends DataStore
 		    newDataStore = true;
 		    playerDataFolder.mkdirs();
 		    claimDataFolder.mkdirs();
+		}
+		
+		/*
+			MyM Changes for ClaimHistory
+			12/22/2014 - LucidTheStick
+		*/
+		//check if claimhistory exists and creates if doesn't
+		File claimHistoryFolder = new File(claimHistoryFolderPath);
+		if(!claimHistoryFolder.exists())
+		{
+		    claimHistoryFolder.mkdirs();
 		}
 		
 		//if there's no data yet, then anything written will use the schema implemented by this code
@@ -784,4 +800,46 @@ public class FlatFileDataStore extends DataStore
         catch(IOException exception) {}
         
     }
+	
+	/*
+		MyM changes for ClaimHistory
+		12/22/2014 - LucidTheStick
+	*/
+	@Override
+	synchronized void writeClaimHistoryToStorage(Claim claim, Player player, Command cmd, String[] args)
+	{
+		String claimID = String.valueOf(claim.id);
+		
+		BufferedWriter outStream = null;
+		
+		try
+		{
+			//open the claim's file						
+			File claimHistoryFile = new File(claimHistoryDataFolderPath + File.separator + claimID);
+			claimHistoryFile.createNewFile();
+			outStream = new BufferedWriter(new FileWriter(claimHistoryFile, true));
+			
+			//write action to file
+			outStream.write(new Date() + " - " + player.getName() + " - " + cmd.getName() + " ");
+			for(int i = 1; i < args.length; i++)
+			{
+				outStream.write(args[i] + " ");
+			}
+			
+		}		
+		
+		//if any problem, log it
+		catch(Exception e)
+		{
+			GriefPrevention.AddLogEntry("Unexpected exception saving data for claim history \"" + claimID + "\": " + e.toString());
+			e.printStackTrace();
+		}
+		
+		//close the file
+		try
+		{
+			if(outStream != null) outStream.close();
+		}
+		catch(IOException exception) {}
+	}
 }
