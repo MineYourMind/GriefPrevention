@@ -842,7 +842,7 @@ public class GriefPrevention extends JavaPlugin
 		Claim targetClaim = this.dataStore.getClaimAt(player.getLocation(), true /*ignore height*/, null);
 		if(targetClaim != null)
 		{
-			this.dataStore.writeClaimHistoryToStorage(claim, player, cmd, args);
+			this.dataStore.writeClaimHistoryToStorage(targetClaim, player, cmd, args);
 		}
 
 		//abandonclaim
