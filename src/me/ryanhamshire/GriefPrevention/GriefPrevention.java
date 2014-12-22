@@ -834,6 +834,17 @@ public class GriefPrevention extends JavaPlugin
 			player = (Player) sender;
 		}
 		
+		/*
+			MyM Changes for ClaimHistory
+			12/22/2014 - LucidTheStick
+		*/
+		//Which claim is command targeted at?
+		Claim targetClaim = this.dataStore.getClaimAt(player.getLocation(), true /*ignore height*/, null);
+		if(targetClaim != null)
+		{
+			this.dataStore.writeClaimHistoryToStorage(claim, player, cmd, args);
+		}
+
 		//abandonclaim
 		if(cmd.getName().equalsIgnoreCase("abandonclaim") && player != null)
 		{
