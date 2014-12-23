@@ -18,6 +18,14 @@
 
 package me.ryanhamshire.GriefPrevention;
 
+/*
+	MyM Changes for ClaimHistory
+	12/22/2014 - LucidTheStick
+*/
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -660,4 +668,20 @@ public class DatabaseDataStore extends DataStore
             GriefPrevention.AddLogEntry(e.getMessage());
         }
     }
+	
+	/*
+		MyM changes for ClaimHistory
+		12/22/2014 - LucidTheStick
+	*/
+	@Override
+	synchronized void writeClaimHistoryToStorage(Claim claim, Player player, Command cmd, String[] args)
+	{
+	}
+	@Override
+	synchronized String[] getClaimHistoryFromStorage(Claim claim)
+	{
+		String claimID = String.valueOf(claim.id);
+		String[] results = {"No entries"};
+		return results;
+	}
 }

@@ -18,6 +18,14 @@
 
 package me.ryanhamshire.GriefPrevention;
 
+/*
+	MyM Changes for ClaimHistory
+	12/22/2014 - LucidTheStick
+*/
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1333,4 +1341,11 @@ public abstract class DataStore
         
         return claims;        
     }
+	
+	/*
+		MyM changes for ClaimHistory
+		12/22/2014 - LucidTheStick
+	*/
+	abstract void writeClaimHistoryToStorage(Claim claim, Player player, Command cmd, String[] args);
+	abstract String[] getClaimHistoryFromStorage(Claim claim);
 }

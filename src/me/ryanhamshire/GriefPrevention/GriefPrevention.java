@@ -834,6 +834,67 @@ public class GriefPrevention extends JavaPlugin
 			player = (Player) sender;
 		}
 		
+		/*
+			MyM Changes for ClaimHistory
+			12/22/2014 - LucidTheStick
+		*/
+		//Which claim is command targeted at?
+		Claim targetClaim = this.dataStore.getClaimAt(player.getLocation(), true /*ignore height*/, null);
+		if(targetClaim != null)
+		{
+			this.dataStore.writeClaimHistoryToStorage(targetClaim, player, cmd, args);
+		}
+		//claimhistory
+		if(cmd.getName().equalsIgnoreCase("claimhistory") && player != null && targetClaim != null)
+		{
+			/*
+			int i = 0;
+			if(args.length != 0) i = Integer.parseInt(args[0]);
+			
+			StringBuilder msg = new StringBuilder();
+			msg.append(ChatColor.GREEN + "Claim History ");
+			
+			String[] results = this.dataStore.getClaimHistoryFromStorage(targetClaim);
+			if(results.length <= 10)
+			{
+				i = results.length;
+				msg.append("1 - " + i+1);
+			}
+			else
+			{
+				i = results.length - i;
+				msg.append(i-9 + " - " + i+1);
+			}
+			
+			msg.append(System.getProperty("line.separator"));
+			
+			for(;i >= 0;)
+			{
+				msg.append(ChatColor.YELLOW + results[i]);
+				msg.append(System.getProperty("line.separator"));
+				i = i-1
+				
+			}
+			*/
+			StringBuilder msg = new StringBuilder();
+			msg.append(ChatColor.GREEN + "Claim History");
+			msg.append(System.getProperty("line.separator"));
+			
+			String[] results = this.dataStore.getClaimHistoryFromStorage(targetClaim);
+			int i = results.length - 1;
+
+			
+			for(;i >= 0;)
+			{
+				msg.append(ChatColor.YELLOW + results[i]);
+				msg.append(System.getProperty("line.separator"));
+				i = i-1;
+				
+			}
+			player.sendMessage(msg.toString());
+			return true;
+		}
+
 		//abandonclaim
 		if(cmd.getName().equalsIgnoreCase("abandonclaim") && player != null)
 		{

@@ -140,6 +140,10 @@ commands:
    givepet:
       description: Allows a player to give away a pet he or she tamed.
       usage: /GivePet <player>
+   claimhistory:
+      description: Allows staff to view claim history for claim currently in. Must be used in claim.
+      usage: /claimhistory
+      permission: grief-prevention.claimhistory
 permissions:
     griefprevention.createclaims:
         description: Grants permission to create claims.
@@ -160,6 +164,7 @@ permissions:
             griefprevention.softmute: true
             griefprevention.reload: true
             griefprevention.visualizenearbyclaims: true
+            griefprevention.claimhistory: true
     griefprevention.restorenature:
         description: Grants permission to use /RestoreNature.
         default: op
@@ -205,3 +210,6 @@ permissions:
     griefprevention.visualizenearbyclaims:
         description: Allows a player to see all nearby claims at once.
         default: op
+    grief-prevention.claimhistory:
+        description: Allows a player to see all nearby claims at once.
+        default: true

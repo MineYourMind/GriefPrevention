@@ -18,6 +18,14 @@
 
 package me.ryanhamshire.GriefPrevention;
 
+/*
+	MyM Changes for ClaimHistory
+	12/22/2014 - LucidTheStick
+*/
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
 import java.io.*;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -33,6 +41,11 @@ public class FlatFileDataStore extends DataStore
 	private final static String claimDataFolderPath = dataLayerFolderPath + File.separator + "ClaimData";
 	private final static String nextClaimIdFilePath = claimDataFolderPath + File.separator + "_nextClaimID";
 	private final static String schemaVersionFilePath = dataLayerFolderPath + File.separator + "_schemaVersion";
+	/*
+			MyM Changes for ClaimHistory
+			12/22/2014 - LucidTheStick
+	*/
+	private final static String claimHistoryFolderPath = dataLayerFolderPath + File.separator + "ClaimHistory";
 	
 	static boolean hasData()
 	{
@@ -60,6 +73,17 @@ public class FlatFileDataStore extends DataStore
 		    newDataStore = true;
 		    playerDataFolder.mkdirs();
 		    claimDataFolder.mkdirs();
+		}
+		
+		/*
+			MyM Changes for ClaimHistory
+			12/22/2014 - LucidTheStick
+		*/
+		//check if claimhistory exists and creates if doesn't
+		File claimHistoryFolder = new File(claimHistoryFolderPath);
+		if(!claimHistoryFolder.exists())
+		{
+		    claimHistoryFolder.mkdirs();
 		}
 		
 		//if there's no data yet, then anything written will use the schema implemented by this code
@@ -784,4 +808,98 @@ public class FlatFileDataStore extends DataStore
         catch(IOException exception) {}
         
     }
+	/*
+		MyM changes for ClaimHistory
+		12/22/2014 - LucidTheStick
+	*/
+	@Override
+	synchronized void writeClaimHistoryToStorage(Claim claim, Player player, Command cmd, String[] args)
+	{
+		String claimID = String.valueOf(claim.id);
+		
+		BufferedWriter outStream = null;
+		
+		try
+		{
+			//open the claim's file						
+			File claimHistoryFile = new File(claimHistoryFolderPath + File.separator + claimID);
+			claimHistoryFile.createNewFile();
+			outStream = new BufferedWriter(new FileWriter(claimHistoryFile, true));
+			DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+			//write action to file
+			outStream.write(dateFormat.format(new Date()) + "||" + player.getName() + "||" + cmd.getName());
+			for(int i = 0; i < args.length; i++)
+			{
+				outStream.write(" " + args[i]);
+			}
+      outStream.newLine();	
+			
+		}		
+		
+		//if any problem, log it
+		catch(Exception e)
+		{
+			GriefPrevention.AddLogEntry("Unexpected exception saving data for claim history \"" + claimID + "\": " + e.toString());
+			e.printStackTrace();
+		}
+		
+		//close the file
+		try
+		{
+			if(outStream != null) outStream.close();
+		}
+		catch(IOException exception) {}
+	}
+	@Override
+	synchronized String[] getClaimHistoryFromStorage(Claim claim)
+	{
+		String claimID = String.valueOf(claim.id);
+		String[] results = {};
+		
+		File claimHistoryFile = new File(claimHistoryFolderPath + File.separator + claimID);
+        if(claimHistoryFile.exists())
+        {
+            BufferedReader inStream = null;
+            try
+            {
+                inStream = new BufferedReader(new FileReader(claimHistoryFile.getAbsolutePath()));
+				//read the first line
+                String line = inStream.readLine();
+				int intResults = 0;
+				while (line != null)  
+				{  
+				
+					String[] parts = line.split("||");
+					
+					DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+					
+					//try to parse line
+					//schemaVersion = Integer.parseInt(line);
+					
+					String entry = "";
+					for(int i = 0; i < parts.length; i++)
+					{
+						entry = entry + parts[i] + " ";
+					}
+					results[intResults] = entry;
+					
+					//prep for next line
+					intResults++;
+					line = inStream.readLine();  
+				} 
+            }
+            catch(Exception e){ }
+            
+            try
+            {
+                if(inStream != null) inStream.close();                  
+            }
+            catch(IOException exception) {}
+        }
+        else
+        {
+            results[0] = "No entries";
+        }
+		return results;
+	}
 }
