@@ -825,12 +825,12 @@ public class FlatFileDataStore extends DataStore
 			File claimHistoryFile = new File(claimHistoryFolderPath + File.separator + claimID);
 			claimHistoryFile.createNewFile();
 			outStream = new BufferedWriter(new FileWriter(claimHistoryFile, true));
-			
+			DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
 			//write action to file
-			outStream.write(new Date() + " - " + player.getName() + " - " + cmd.getName() + " ");
+			outStream.write(dateFormat.format(new Date()) + "||" + player.getName() + "||" + cmd.getName());
 			for(int i = 0; i < args.length; i++)
 			{
-				outStream.write(args[i] + " ");
+				outStream.write(" " + args[i]);
 			}
       outStream.newLine();	
 			
@@ -849,5 +849,56 @@ public class FlatFileDataStore extends DataStore
 			if(outStream != null) outStream.close();
 		}
 		catch(IOException exception) {}
+	}
+	@Override
+	synchronized String[] getClaimHistoryFromStorage(Claim claim)
+	{
+		String claimID = String.valueOf(claim.id);
+		String[] results = {};
+		
+		File claimHistoryFile = new File(claimHistoryFolderPath + File.separator + claimID);
+        if(claimHistoryFile.exists())
+        {
+            BufferedReader inStream = null;
+            try
+            {
+                inStream = new BufferedReader(new FileReader(claimHistoryFile.getAbsolutePath()));
+				//read the first line
+                String line = inStream.readLine();
+				int intResults = 0;
+				while (line != null)  
+				{  
+				
+					String[] parts = line.split("||");
+					
+					DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+					
+					//try to parse line
+					//schemaVersion = Integer.parseInt(line);
+					
+					String entry;
+					for(int i = 0; i < parts.length; i++)
+					{
+						results[intResults] = parts[i] + " ";
+					}
+					
+					//prep for next line
+					intResults++;
+					line = inStream.readLine();  
+				} 
+            }
+            catch(Exception e){ }
+            
+            try
+            {
+                if(inStream != null) inStream.close();                  
+            }
+            catch(IOException exception) {}
+        }
+        else
+        {
+            results[0] = "No entries";
+        }
+		return results;
 	}
 }

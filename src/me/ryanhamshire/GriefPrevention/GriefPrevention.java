@@ -844,6 +844,38 @@ public class GriefPrevention extends JavaPlugin
 		{
 			this.dataStore.writeClaimHistoryToStorage(targetClaim, player, cmd, args);
 		}
+		//claimhistory
+		if(cmd.getName().equalsIgnoreCase("claimhistory") && player != null && targetClaim != null)
+		{
+			int i = 0;
+			if(args.length != 0) i = Integer.parseInt(args[0]);
+			
+			StringBuilder msg = new StringBuilder();
+			msg.append(ChatColor.GREEN + "Claim History ");
+			
+			String[] results = this.dataStore.getClaimHistoryFromStorage(targetClaim);
+			if(results.length > 10)
+			{
+				i = results.length;
+			}
+			else
+			{
+				i = results.length - i;
+			}
+			
+			msg.append(i-10 + " - " + i);
+			msg.append(System.getProperty("line.separator"));
+			
+			for(;i >= 0; i = i-1)
+			{
+				msg.append(ChatColor.YELLOW + results[i]);
+				msg.append(System.getProperty("line.separator"));
+				
+				
+			}
+			player.sendMessage(msg.toString());
+			return true;
+		}
 
 		//abandonclaim
 		if(cmd.getName().equalsIgnoreCase("abandonclaim") && player != null)

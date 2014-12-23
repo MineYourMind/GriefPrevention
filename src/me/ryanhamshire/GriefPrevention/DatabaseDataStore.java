@@ -677,4 +677,11 @@ public class DatabaseDataStore extends DataStore
 	synchronized void writeClaimHistoryToStorage(Claim claim, Player player, Command cmd, String[] args)
 	{
 	}
+	@Override
+	synchronized String[] getClaimHistoryFromStorage(Claim claim)
+	{
+		String claimID = String.valueOf(claim.id);
+		String[] results = {"No entries"};
+		return results;
+	}
 }

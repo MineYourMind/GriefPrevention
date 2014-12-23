@@ -1347,4 +1347,5 @@ public abstract class DataStore
 		12/22/2014 - LucidTheStick
 	*/
 	abstract void writeClaimHistoryToStorage(Claim claim, Player player, Command cmd, String[] args);
+	abstract String[] getClaimHistoryFromStorage(Claim claim);
 }
