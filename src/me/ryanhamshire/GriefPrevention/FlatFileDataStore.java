@@ -876,11 +876,12 @@ public class FlatFileDataStore extends DataStore
 					//try to parse line
 					//schemaVersion = Integer.parseInt(line);
 					
-					String entry;
+					String entry = "";
 					for(int i = 0; i < parts.length; i++)
 					{
-						results[intResults] = parts[i] + " ";
+						entry = entry + parts[i] + " ";
 					}
+					results[intResults] = entry;
 					
 					//prep for next line
 					intResults++;
