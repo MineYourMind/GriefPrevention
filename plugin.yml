@@ -143,6 +143,7 @@ commands:
    claimhistory:
       description: Allows staff to view claim history for claim currently in. Must be used in claim.
       usage: /claimhistory
+      permission: grief-prevention.claimhistory
 permissions:
     griefprevention.createclaims:
         description: Grants permission to create claims.
