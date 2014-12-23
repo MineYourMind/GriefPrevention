@@ -854,7 +854,7 @@ public class GriefPrevention extends JavaPlugin
 			msg.append(ChatColor.GREEN + "Claim History ");
 			
 			String[] results = this.dataStore.getClaimHistoryFromStorage(targetClaim);
-			if(results.length =< 10)
+			if(results.length <= 10)
 			{
 				i = results.length;
 				msg.append("1 - " + i+1);
@@ -862,9 +862,9 @@ public class GriefPrevention extends JavaPlugin
 			else
 			{
 				i = results.length - i;
+				msg.append(i-9 + " - " + i+1);
 			}
 			
-			msg.append(i-9 + " - " + i+1);
 			msg.append(System.getProperty("line.separator"));
 			
 			for(;i >= 0; i = i-1)
