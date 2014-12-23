@@ -828,7 +828,7 @@ public class FlatFileDataStore extends DataStore
 			
 			//write action to file
 			outStream.write(new Date() + " - " + player.getName() + " - " + cmd.getName() + " ");
-			for(int i = 1; i < args.length; i++)
+			for(int i = 0; i < args.length; i++)
 			{
 				outStream.write(args[i] + " ");
 			}
