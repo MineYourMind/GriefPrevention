@@ -881,7 +881,7 @@ public class GriefPrevention extends JavaPlugin
 			msg.append(System.getProperty("line.separator"));
 			
 			String[] results = this.dataStore.getClaimHistoryFromStorage(targetClaim);
-			int i = results.length;
+			int i = results.length - 1;
 
 			
 			for(;i >= 0;)
