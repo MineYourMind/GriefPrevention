@@ -832,6 +832,7 @@ public class FlatFileDataStore extends DataStore
 			{
 				outStream.write(args[i] + " ");
 			}
+      outStream.newLine();	
 			
 		}		
 		
