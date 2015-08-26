@@ -82,7 +82,6 @@ public class BlockEventHandler implements Listener
 		{
 			GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason);
 			breakEvent.setCancelled(true);
-			return;
 		}
 	}
 	
@@ -104,7 +103,7 @@ public class BlockEventHandler implements Listener
 		    if(!withoutSpaces.isEmpty())
 	        {
 		        notEmpty = true;
-		        lines.append("\n  " + event.getLine(i));
+		        lines.append("\n  ").append(event.getLine(i));
 	        }
 		}
 		
@@ -118,7 +117,7 @@ public class BlockEventHandler implements Listener
         }
 		
 		//if not empty and wasn't the same as the last sign, log it and remember it for later
-		PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+		PlayerData playerData = this.dataStore.getPlayerData(player);
 		if(notEmpty && playerData.lastMessage != null && !playerData.lastMessage.equals(signMessage))
 		{		
 			GriefPrevention.AddLogEntry(lines.toString().replace("\n  ", ";"), null);
@@ -173,16 +172,13 @@ public class BlockEventHandler implements Listener
 		if(block.getType() == Material.FIRE && !GriefPrevention.instance.config_pvp_enabledWorlds.contains(block.getWorld()) && !player.hasPermission("griefprevention.lava"))
 		{
 			List<Player> players = block.getWorld().getPlayers();
-			for(int i = 0; i < players.size(); i++)
-			{
-				Player otherPlayer = players.get(i);
+			for (Player otherPlayer : players) {
 				Location location = otherPlayer.getLocation();
-				if(!otherPlayer.equals(player) && location.distanceSquared(block.getLocation()) < 9)
-				{
+				if (!otherPlayer.equals(player) && location.distanceSquared(block.getLocation()) < 9) {
 					GriefPrevention.sendMessage(player, TextMode.Err, Messages.PlayerTooCloseForFire, otherPlayer.getName());
 					placeEvent.setCancelled(true);
 					return;
-				}					
+				}
 			}
 		}
 		
@@ -199,7 +195,7 @@ public class BlockEventHandler implements Listener
 		}
 		
 		//if the block is being placed within or under an existing claim
-		PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+		PlayerData playerData = this.dataStore.getPlayerData(player);
 		Claim claim = this.dataStore.getClaimAt(block.getLocation(), true, playerData.lastClaim);
 		if(claim != null)
 		{
@@ -415,47 +411,38 @@ public class BlockEventHandler implements Listener
 		{
 		    //which blocks are being pushed?
 		    Claim cachedClaim = claim;
-		    for(int i = 0; i < blocks.size(); i++)
-    		{
-    			//if ANY of the pushed blocks are owned by someone other than the piston owner, cancel the event
-    			Block block = blocks.get(i);
-    			claim = this.dataStore.getClaimAt(block.getLocation(), false, cachedClaim);
-    			if(claim != null)
-    			{
-    			    cachedClaim = claim;
-    			    if(!claim.getOwnerName().equals(pistonClaimOwnerName))
-    			    {
-        				event.setCancelled(true);
-        				event.getBlock().getWorld().createExplosion(event.getBlock().getLocation(), 0);
-        				event.getBlock().getWorld().dropItem(event.getBlock().getLocation(), new ItemStack(event.getBlock().getType()));
-        				event.getBlock().setType(Material.AIR);
-        				return;
-    			    }
-    			}
-    		}
+			for (Block block : blocks) {
+				//if ANY of the pushed blocks are owned by someone other than the piston owner, cancel the event
+				claim = this.dataStore.getClaimAt(block.getLocation(), false, cachedClaim);
+				if (claim != null) {
+					cachedClaim = claim;
+					if (!claim.getOwnerName().equals(pistonClaimOwnerName)) {
+						event.setCancelled(true);
+						event.getBlock().getWorld().createExplosion(event.getBlock().getLocation(), 0);
+						event.getBlock().getWorld().dropItem(event.getBlock().getLocation(), new ItemStack(event.getBlock().getType()));
+						event.getBlock().setType(Material.AIR);
+						return;
+					}
+				}
+			}
     		
 			//if any of the blocks are being pushed into a claim from outside, cancel the event
-    		for(int i = 0; i < blocks.size(); i++)
-			{
-				Block block = blocks.get(i);
+			for (Block block : blocks) {
 				Claim originalClaim = this.dataStore.getClaimAt(block.getLocation(), false, cachedClaim);
 				String originalOwnerName = "";
-				if(originalClaim != null)
-				{
+				if (originalClaim != null) {
 					cachedClaim = originalClaim;
-				    originalOwnerName = originalClaim.getOwnerName();
+					originalOwnerName = originalClaim.getOwnerName();
 				}
-				
+
 				Claim newClaim = this.dataStore.getClaimAt(block.getRelative(event.getDirection()).getLocation(), false, cachedClaim);
 				String newOwnerName = "";
-				if(newClaim != null)
-				{
-				    newOwnerName = newClaim.getOwnerName();
+				if (newClaim != null) {
+					newOwnerName = newClaim.getOwnerName();
 				}
-				
+
 				//if pushing this block will change ownership, cancel the event and take away the piston (for performance reasons)
-				if(!newOwnerName.equals(originalOwnerName) && !newOwnerName.isEmpty())
-				{
+				if (!newOwnerName.equals(originalOwnerName) && !newOwnerName.isEmpty()) {
 					event.setCancelled(true);
 					event.getBlock().getWorld().createExplosion(event.getBlock().getLocation(), 0);
 					event.getBlock().getWorld().dropItem(event.getBlock().getLocation(), new ItemStack(event.getBlock().getType()));
@@ -486,8 +473,7 @@ public class BlockEventHandler implements Listener
     		    if(pistonClaim == null)
     		    {
     		        event.setCancelled(true);
-    		        return;
-    		    }
+				}
 				// not 1.7 compatible
 				/*
     		    for(Block movedBlock : event.getBlocks())
@@ -609,11 +595,8 @@ public class BlockEventHandler implements Listener
 			};
 			
 			//pro-actively put out any fires adjacent the burning block, to reduce future processing here
-			for(int i = 0; i < adjacentBlocks.length; i++)
-			{
-				Block adjacentBlock = adjacentBlocks[i];
-				if(adjacentBlock.getType() == Material.FIRE && adjacentBlock.getRelative(BlockFace.DOWN).getType() != Material.NETHERRACK)
-				{
+			for (Block adjacentBlock : adjacentBlocks) {
+				if (adjacentBlock.getType() == Material.FIRE && adjacentBlock.getRelative(BlockFace.DOWN).getType() != Material.NETHERRACK) {
 					adjacentBlock.setType(Material.AIR);
 				}
 			}
