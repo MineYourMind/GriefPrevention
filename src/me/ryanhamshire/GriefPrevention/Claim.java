@@ -100,11 +100,7 @@ public class Claim
 	//and when he has some level of permission in the claim
 	public boolean canSiege(Player defender)
 	{
-		if(this.isAdminClaim()) return false;
-		
-		if(this.allowAccess(defender) != null) return false;
-		
-		return true;
+		return !this.isAdminClaim() && this.allowAccess(defender) == null;
 	}
 	
 	//removes any lava above sea level in a claim
@@ -202,38 +198,26 @@ public class Claim
 		this.ownerID = ownerID;
 		
 		//other permissions
-		for(int i = 0; i < builderIDs.length; i++)
-		{
-			String builderID = builderIDs[i];
-			if(builderID != null && !builderID.isEmpty())
-			{
+		for (String builderID : builderIDs) {
+			if (builderID != null && !builderID.isEmpty()) {
 				this.playerIDToClaimPermissionMap.put(builderID, ClaimPermission.Build);
 			}
 		}
-		
-		for(int i = 0; i < containerIds.length; i++)
-		{
-			String containerID = containerIds[i];
-			if(containerID != null && !containerID.isEmpty())
-			{
+
+		for (String containerID : containerIds) {
+			if (containerID != null && !containerID.isEmpty()) {
 				this.playerIDToClaimPermissionMap.put(containerID, ClaimPermission.Inventory);
 			}
 		}
-		
-		for(int i = 0; i < accessorIDs.length; i++)
-		{
-			String accessorID = accessorIDs[i];
-			if(accessorID != null && !accessorID.isEmpty())
-			{
+
+		for (String accessorID : accessorIDs) {
+			if (accessorID != null && !accessorID.isEmpty()) {
 				this.playerIDToClaimPermissionMap.put(accessorID, ClaimPermission.Access);
 			}
 		}
-		
-		for(int i = 0; i < managerIDs.length; i++)
-		{
-			String managerID = managerIDs[i];
-			if(managerID != null && !managerID.isEmpty())
-			{
+
+		for (String managerID : managerIDs) {
+			if (managerID != null && !managerID.isEmpty()) {
 				this.managers.add(managerID);
 			}
 		}
@@ -328,58 +312,32 @@ public class Claim
 	{
 		//if we don't know who's asking, always say no (i've been told some mods can make this happen somehow)
 		if(player == null) return "";
-		
 		//when a player tries to build in a claim, if he's under siege, the siege may extend to include the new claim
 		GriefPrevention.instance.dataStore.tryExtendSiege(player, this);
-		
 		//admin claims can always be modified by admins, no exceptions
-		if(this.isAdminClaim())
-		{
-			if(player.hasPermission("griefprevention.adminclaims")) return null;
-		}
-		
+		if(this.isAdminClaim()) if(player.hasPermission("griefprevention.adminclaims")) return null;
 		//no building while under siege
-		if(this.siegeData != null)
-		{
-			return GriefPrevention.instance.dataStore.getMessage(Messages.NoBuildUnderSiege, this.siegeData.attacker.getName());
-		}
-		
+		if(this.siegeData != null) return GriefPrevention.instance.dataStore.getMessage(Messages.NoBuildUnderSiege, this.siegeData.attacker.getName());
 		//no building while in pvp combat
-		PlayerData playerData = GriefPrevention.instance.dataStore.getPlayerData(player.getUniqueId());
-		if(playerData.inPvpCombat())
-		{
-			return GriefPrevention.instance.dataStore.getMessage(Messages.NoBuildPvP);			
-		}
-		
+		PlayerData playerData = GriefPrevention.instance.dataStore.getPlayerData(player);
+		if(playerData.inPvpCombat()) return GriefPrevention.instance.dataStore.getMessage(Messages.NoBuildPvP);
 		//owners can make changes, or admins with ignore claims mode enabled
-		if(player.getUniqueId().equals(this.ownerID) || GriefPrevention.instance.dataStore.getPlayerData(player.getUniqueId()).ignoreClaims) return null;
-		
+		if(player.getUniqueId().equals(this.ownerID) || GriefPrevention.instance.dataStore.getPlayerData(player).ignoreClaims) return null;
 		//anyone with explicit build permission can make changes
 		if(this.hasExplicitPermission(player, ClaimPermission.Build)) return null;
-		
 		//also everyone is a member of the "public", so check for public permission
 		ClaimPermission permissionLevel = this.playerIDToClaimPermissionMap.get("public");
 		if(ClaimPermission.Build == permissionLevel) return null;
-		
 		//subdivision permission inheritance
-		if(this.parent != null)
-			return this.parent.allowBuild(player, material);
-		
+		if(this.parent != null) return this.parent.allowBuild(player, material);
 		//failure message for all other cases
 		String reason = GriefPrevention.instance.dataStore.getMessage(Messages.NoBuildPermission, this.getOwnerName());
 		if(player.hasPermission("griefprevention.ignoreclaims"))
 				reason += "  " + GriefPrevention.instance.dataStore.getMessage(Messages.IgnoreClaimsAdvertisement);
-		
 		//allow for farming with /containertrust permission
 		if(reason != null && this.allowContainers(player) == null)
-        {
             //do allow for farming, if player has /containertrust permission
-            if(this.placeableForFarming(material))
-            {
-                return null;
-            }
-        }
-        
+            if(this.placeableForFarming(material)) return null;
         return reason;
 	}
 	
@@ -387,34 +345,27 @@ public class Claim
 	{
 		String playerID = player.getUniqueId().toString();
 		Set<String> keys = this.playerIDToClaimPermissionMap.keySet();
-		Iterator<String> iterator = keys.iterator();
-		while(iterator.hasNext())
-		{
-			String identifier = iterator.next();
-			if(playerID.equalsIgnoreCase(identifier) && this.playerIDToClaimPermissionMap.get(identifier) == level) return true;
-			
-			else if(identifier.startsWith("[") && identifier.endsWith("]"))
-			{
-				//drop the brackets
+		for (String identifier : keys) {
+			if (playerID.equalsIgnoreCase(identifier) || player.getDisplayName().equalsIgnoreCase(identifier) && this.playerIDToClaimPermissionMap.get(identifier) == level)
+				return true;
+			else if (identifier.startsWith("[") && identifier.endsWith("]")) {
 				String permissionIdentifier = identifier.substring(1, identifier.length() - 1);
-				
-				//defensive coding
-				if(permissionIdentifier == null || permissionIdentifier.isEmpty()) continue;
-				
-				//check permission
-				if(player.hasPermission(permissionIdentifier) && this.playerIDToClaimPermissionMap.get(identifier) == level) return true;
+				if (permissionIdentifier.isEmpty()) continue;
+				if (player.hasPermission(permissionIdentifier) && this.playerIDToClaimPermissionMap.get(identifier) == level)
+					return true;
 			}
 		}
-		
 		return false;			
 	}
 	
 	//break permission check
 	public String allowBreak(Player player, Material material)
 	{
+		Bukkit.broadcastMessage("10");
 		//if under siege, some blocks will be breakable
 		if(this.siegeData != null)
 		{
+			Bukkit.broadcastMessage("11");
 			boolean breakable = false;
 			
 			//search for block type in list of breakable blocks
@@ -427,22 +378,28 @@ public class Claim
 					break;
 				}
 			}
+			Bukkit.broadcastMessage("12");
 			
 			//custom error messages for siege mode
 			if(!breakable)
 			{
+				Bukkit.broadcastMessage("13");
 				return GriefPrevention.instance.dataStore.getMessage(Messages.NonSiegeMaterial);
 			}
 			else if(player.getUniqueId().equals(this.ownerID))
 			{
+				Bukkit.broadcastMessage("14");
 				return GriefPrevention.instance.dataStore.getMessage(Messages.NoOwnerBuildUnderSiege);
 			}
 			else
 			{
+				Bukkit.broadcastMessage("15");
 				return null;
 			}
 		}
-		
+
+		Bukkit.broadcastMessage("16");
+
 		//if not under siege, build rules apply
 		return this.allowBuild(player, material);
 	}
@@ -460,7 +417,7 @@ public class Claim
 		}
 		
 		//claim owner and admins in ignoreclaims mode have access
-		if(player.getUniqueId().equals(this.ownerID) || GriefPrevention.instance.dataStore.getPlayerData(player.getUniqueId()).ignoreClaims) return null;
+		if(player.getUniqueId().equals(this.ownerID) || GriefPrevention.instance.dataStore.getPlayerData(player).ignoreClaims) return null;
 		
 		//look for explicit individual access, inventory, or build permission
 		if(this.hasExplicitPermission(player, ClaimPermission.Access)) return null;
@@ -498,7 +455,7 @@ public class Claim
 		}
 		
 		//owner and administrators in ignoreclaims mode have access
-		if(player.getUniqueId().equals(this.ownerID) || GriefPrevention.instance.dataStore.getPlayerData(player.getUniqueId()).ignoreClaims) return null;
+		if(player.getUniqueId().equals(this.ownerID) || GriefPrevention.instance.dataStore.getPlayerData(player).ignoreClaims) return null;
 		
 		//admin claims need adminclaims permission only.
 		if(this.isAdminClaim())
@@ -535,16 +492,13 @@ public class Claim
 		if(this.allowEdit(player) == null) return null;
 		
 		//anyone who's in the managers (/PermissionTrust) list can do this
-		for(int i = 0; i < this.managers.size(); i++)
-		{
-			String managerID = this.managers.get(i);
-			if(player.getUniqueId().toString().equals(managerID)) return null;
-			
-			else if(managerID.startsWith("[") && managerID.endsWith("]"))
-			{
+		for (String managerID : this.managers) {
+			if (player.getUniqueId().toString().equals(managerID)) return null;
+
+			else if (managerID.startsWith("[") && managerID.endsWith("]")) {
 				managerID = managerID.substring(1, managerID.length() - 1);
-				if(managerID == null || managerID.isEmpty()) continue;
-				if(player.hasPermission(managerID)) return null;
+				if (managerID.isEmpty()) continue;
+				if (player.hasPermission(managerID)) return null;
 			}
 		}
 		
@@ -592,30 +546,20 @@ public class Claim
 	public void getPermissions(ArrayList<String> builders, ArrayList<String> containers, ArrayList<String> accessors, ArrayList<String> managers)
 	{
 		//loop through all the entries in the hash map
-		Iterator<Map.Entry<String, ClaimPermission>> mappingsIterator = this.playerIDToClaimPermissionMap.entrySet().iterator(); 
-		while(mappingsIterator.hasNext())
-		{
-			Map.Entry<String, ClaimPermission> entry = mappingsIterator.next();
-			
+		for (Map.Entry<String, ClaimPermission> entry : this.playerIDToClaimPermissionMap.entrySet()) {
 			//build up a list for each permission level
-			if(entry.getValue() == ClaimPermission.Build)
-			{
+			if (entry.getValue() == ClaimPermission.Build) {
 				builders.add(entry.getKey());
-			}
-			else if(entry.getValue() == ClaimPermission.Inventory)
-			{
+			} else if (entry.getValue() == ClaimPermission.Inventory) {
 				containers.add(entry.getKey());
-			}
-			else
-			{
+			} else {
 				accessors.add(entry.getKey());
-			}			
+			}
 		}
 		
 		//managers are handled a little differently
-		for(int i = 0; i < this.managers.size(); i++)
-		{
-			managers.add(this.managers.get(i));
+		for (String manager : this.managers) {
+			managers.add(manager);
 		}
 	}
 	
@@ -678,11 +622,9 @@ public class Claim
 		else if(excludeSubdivisions)
 		{
 			//search all subdivisions to see if the location is in any of them
-			for(int i = 0; i < this.children.size(); i++)
-			{
+			for (Claim aChildren : this.children) {
 				//if we find such a subdivision, return false
-				if(this.children.get(i).contains(location, ignoreHeight, true))
-				{
+				if (aChildren.contains(location, ignoreHeight, true)) {
 					return false;
 				}
 			}
@@ -698,43 +640,43 @@ public class Claim
 	{
 		//NOTE:  if trying to understand this makes your head hurt, don't feel bad - it hurts mine too.  
 		//try drawing pictures to visualize test cases.
-		
+
 		if(!this.lesserBoundaryCorner.getWorld().equals(otherClaim.getLesserBoundaryCorner().getWorld())) return false;
-		
+
 		//first, check the corners of this claim aren't inside any existing claims
 		if(otherClaim.contains(this.lesserBoundaryCorner, true, false)) return true;
 		if(otherClaim.contains(this.greaterBoundaryCorner, true, false)) return true;
 		if(otherClaim.contains(new Location(this.lesserBoundaryCorner.getWorld(), this.lesserBoundaryCorner.getBlockX(), 0, this.greaterBoundaryCorner.getBlockZ()), true, false)) return true;
 		if(otherClaim.contains(new Location(this.lesserBoundaryCorner.getWorld(), this.greaterBoundaryCorner.getBlockX(), 0, this.lesserBoundaryCorner.getBlockZ()), true, false)) return true;
-		
+
 		//verify that no claim's lesser boundary point is inside this new claim, to cover the "existing claim is entirely inside new claim" case
 		if(this.contains(otherClaim.getLesserBoundaryCorner(), true, false)) return true;
-		
+
 		//verify this claim doesn't band across an existing claim, either horizontally or vertically		
-		if(	this.getLesserBoundaryCorner().getBlockZ() <= otherClaim.getGreaterBoundaryCorner().getBlockZ() && 
-			this.getLesserBoundaryCorner().getBlockZ() >= otherClaim.getLesserBoundaryCorner().getBlockZ() && 
+		if(	this.getLesserBoundaryCorner().getBlockZ() <= otherClaim.getGreaterBoundaryCorner().getBlockZ() &&
+			this.getLesserBoundaryCorner().getBlockZ() >= otherClaim.getLesserBoundaryCorner().getBlockZ() &&
 			this.getLesserBoundaryCorner().getBlockX() < otherClaim.getLesserBoundaryCorner().getBlockX() &&
 			this.getGreaterBoundaryCorner().getBlockX() > otherClaim.getGreaterBoundaryCorner().getBlockX() )
 			return true;
-		
-		if(	this.getGreaterBoundaryCorner().getBlockZ() <= otherClaim.getGreaterBoundaryCorner().getBlockZ() && 
-			this.getGreaterBoundaryCorner().getBlockZ() >= otherClaim.getLesserBoundaryCorner().getBlockZ() && 
+
+		if(	this.getGreaterBoundaryCorner().getBlockZ() <= otherClaim.getGreaterBoundaryCorner().getBlockZ() &&
+			this.getGreaterBoundaryCorner().getBlockZ() >= otherClaim.getLesserBoundaryCorner().getBlockZ() &&
 			this.getLesserBoundaryCorner().getBlockX() < otherClaim.getLesserBoundaryCorner().getBlockX() &&
 			this.getGreaterBoundaryCorner().getBlockX() > otherClaim.getGreaterBoundaryCorner().getBlockX() )
 			return true;
-		
-		if(	this.getLesserBoundaryCorner().getBlockX() <= otherClaim.getGreaterBoundaryCorner().getBlockX() && 
-			this.getLesserBoundaryCorner().getBlockX() >= otherClaim.getLesserBoundaryCorner().getBlockX() && 
+
+		if(	this.getLesserBoundaryCorner().getBlockX() <= otherClaim.getGreaterBoundaryCorner().getBlockX() &&
+			this.getLesserBoundaryCorner().getBlockX() >= otherClaim.getLesserBoundaryCorner().getBlockX() &&
 			this.getLesserBoundaryCorner().getBlockZ() < otherClaim.getLesserBoundaryCorner().getBlockZ() &&
 			this.getGreaterBoundaryCorner().getBlockZ() > otherClaim.getGreaterBoundaryCorner().getBlockZ() )
 			return true;
-			
-		if(	this.getGreaterBoundaryCorner().getBlockX() <= otherClaim.getGreaterBoundaryCorner().getBlockX() && 
-			this.getGreaterBoundaryCorner().getBlockX() >= otherClaim.getLesserBoundaryCorner().getBlockX() && 
+
+		if(	this.getGreaterBoundaryCorner().getBlockX() <= otherClaim.getGreaterBoundaryCorner().getBlockX() &&
+			this.getGreaterBoundaryCorner().getBlockX() >= otherClaim.getLesserBoundaryCorner().getBlockX() &&
 			this.getLesserBoundaryCorner().getBlockZ() < otherClaim.getLesserBoundaryCorner().getBlockZ() &&
 			this.getGreaterBoundaryCorner().getBlockZ() > otherClaim.getGreaterBoundaryCorner().getBlockZ() )
 			return true;
-		
+
 		return false;
 	}
 	
@@ -762,13 +704,10 @@ public class Claim
 		for(Chunk chunk : chunks)
 		{
 			Entity [] entities = chunk.getEntities();
-			for(int i = 0; i < entities.length; i++)
-			{
-				Entity entity = entities[i];
-				if(!(entity instanceof Player) && this.contains(entity.getLocation(), false, false))
-				{
+			for (Entity entity : entities) {
+				if (!(entity instanceof Player) && this.contains(entity.getLocation(), false, false)) {
 					totalEntities++;
-					if(totalEntities > maxEntities) entity.remove();
+					if (totalEntities > maxEntities) entity.remove();
 				}
 			}
 		}

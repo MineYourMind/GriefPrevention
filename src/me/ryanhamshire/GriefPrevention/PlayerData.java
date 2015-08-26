@@ -38,7 +38,10 @@ public class PlayerData
 {
 	//the player's ID
 	public UUID playerID;
-	
+
+    //fakeplayer's name
+    public String fakePlayerName;
+
 	//the player's claims
 	private Vector<Claim> claims = null;
 	
@@ -157,6 +160,7 @@ public class PlayerData
 	//the number of claim blocks a player has available for claiming land
 	public int getRemainingClaimBlocks()
 	{
+        if(playerID == null) return 0;
 		int remainingBlocks = this.getAccruedClaimBlocks() + this.getBonusClaimBlocks();
 		for(int i = 0; i < this.getClaims().size(); i++)
 		{
@@ -173,6 +177,7 @@ public class PlayerData
 	//don't load data from secondary storage until it's needed
 	public int getAccruedClaimBlocks()
 	{
+        if(playerID == null) return 0;
 	    if(this.accruedClaimBlocks == null) this.loadDataFromSecondaryStorage();
         
 	    //if player is over accrued limit, accrued limit was probably reduced in config file AFTER he accrued
@@ -197,18 +202,21 @@ public class PlayerData
 
     public void setAccruedClaimBlocks(Integer accruedClaimBlocks)
     {
+        if(playerID == null) return;
         this.accruedClaimBlocks = accruedClaimBlocks;
         this.newlyAccruedClaimBlocks = 0;
     }
 
     public int getBonusClaimBlocks()
     {
+        if(playerID == null) return 0;
         if(this.bonusClaimBlocks == null) this.loadDataFromSecondaryStorage();
         return bonusClaimBlocks;
     }
 
     public void setBonusClaimBlocks(Integer bonusClaimBlocks)
     {
+        if(playerID == null) return;
         this.bonusClaimBlocks = bonusClaimBlocks;
     }
 
@@ -225,6 +233,7 @@ public class PlayerData
     
     private void loadDataFromSecondaryStorage()
     {
+        if(playerID == null) return;
         //reach out to secondary storage to get any data there
         PlayerData storageData = GriefPrevention.instance.dataStore.getPlayerDataFromStorage(this.playerID);
         
@@ -280,6 +289,7 @@ public class PlayerData
     
     public Vector<Claim> getClaims()
     {
+        if(playerID == null) return null;
         if(this.claims == null)
         {
             this.claims = new Vector<Claim>();
@@ -338,6 +348,7 @@ public class PlayerData
     
     public void accrueBlocks(int howMany)
     {
+        if(playerID == null) return;
         this.newlyAccruedClaimBlocks += howMany;
     }
 }
