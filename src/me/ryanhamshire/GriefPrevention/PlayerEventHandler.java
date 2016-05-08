@@ -628,7 +628,7 @@ public class PlayerEventHandler implements Listener
 		this.lastLoginThisServerSessionMap.put(playerID, nowDate);
 
 		//if newish, prevent chat until he's moved a bit to prove he's not a bot
-		if(!GriefPrevention.legacy164 && !player.hasAchievement(Achievement.MINE_WOOD))
+		if(player.getFirstPlayed() > System.currentTimeMillis() - 2 * 60 * 60 * 1000)
 		{
 		    playerData.noChatLocation = player.getLocation();
 		}
@@ -725,7 +725,7 @@ public class PlayerEventHandler implements Listener
         {
             String ipAddressString = ipAddress.toString();
             int ipLimit = GriefPrevention.instance.config_ipLimit;
-            if(ipLimit > 0 && !GriefPrevention.legacy164 && !player.hasAchievement(Achievement.MINE_WOOD))
+            if(ipLimit > 0 && player.getFirstPlayed() > System.currentTimeMillis() - 2 * 60 * 60 * 1000)
             {
                 Integer ipCount = this.ipCountHash.get(ipAddressString);
                 if(ipCount == null) ipCount = 0;
@@ -857,7 +857,7 @@ public class PlayerEventHandler implements Listener
         this.dataStore.clearCachedPlayerData(playerID);
 
         //reduce count of players with that player's IP address
-        if(GriefPrevention.instance.config_ipLimit > 0 && !GriefPrevention.legacy164 && !player.hasAchievement(Achievement.MINE_WOOD))
+        if(GriefPrevention.instance.config_ipLimit > 0 && player.getFirstPlayed() > System.currentTimeMillis() - 2 * 60 * 60 * 1000)
         {
             InetAddress ipAddress = playerData.ipAddress;
             if(ipAddress != null)

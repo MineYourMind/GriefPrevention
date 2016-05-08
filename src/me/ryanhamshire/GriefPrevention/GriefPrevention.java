@@ -55,9 +55,6 @@ public class GriefPrevention extends JavaPlugin
 	//for logging to the console and log file
 	private static Logger log = Logger.getLogger("Minecraft");
 
-    public static boolean legacy164 = false;
-    public static boolean legacy1710 = false;
-
 	//variable of players to deny claiming once
 	public static List<UUID> denyClaiming = new ArrayList<UUID>();
 	
@@ -215,11 +212,6 @@ public class GriefPrevention extends JavaPlugin
 	public void onEnable()
 	{ 		
 	    instance = this;
-        if (Bukkit.getVersion().contains("1.6.4)")) {
-            legacy164 = true;
-        } else if (Bukkit.getVersion().contains("1.7.10)")) {
-            legacy1710 = true;
-        }
         
         AddLogEntry("Grief Prevention boot start.");
 		
@@ -1367,7 +1359,7 @@ public class GriefPrevention extends JavaPlugin
 			{
 				GriefPrevention.sendMessage(player, TextMode.Info, Messages.BlockPurchaseCost,
                         String.valueOf(GriefPrevention.instance.config_economy_claimBlocksPurchaseCost),
-                        String.valueOf(GriefPrevention.economy.getBalance(player)));
+                        String.valueOf(GriefPrevention.economy.getBalance(player.getName())));
 				return false;
 			}
 			
@@ -1392,7 +1384,7 @@ public class GriefPrevention extends JavaPlugin
 				}
 				
 				//if the player can't afford his purchase, send error message
-				double balance = economy.getBalance(player);				
+				double balance = economy.getBalance(player.getName());
 				double totalCost = blockCount * GriefPrevention.instance.config_economy_claimBlocksPurchaseCost;				
 				if(totalCost > balance)
 				{
@@ -1403,7 +1395,7 @@ public class GriefPrevention extends JavaPlugin
 				else
 				{
 					//withdraw cost
-					economy.withdrawPlayer(player, totalCost);
+					economy.withdrawPlayer(player.getName(), totalCost);
 					
 					//add blocks
 					playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() + blockCount);
@@ -1478,7 +1470,7 @@ public class GriefPrevention extends JavaPlugin
 			{					
 				//compute value and deposit it
 				double totalValue = blockCount * GriefPrevention.instance.config_economy_claimBlocksSellValue;					
-				economy.depositPlayer(player, totalValue);
+				economy.depositPlayer(player.getName(), totalValue);
 				
 				//subtract blocks
 				playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() - blockCount);
@@ -2596,7 +2588,7 @@ public class GriefPrevention extends JavaPlugin
             {
                 try
                 {
-                    UUID playerID = UUIDProvider.retrieve(player.getName());
+                    UUID playerID = UUIDProvider.getCachedPlayer(player.getName());
                     if(playerID == null) continue;
                     long lastSeen = player.getLastPlayed();
                     

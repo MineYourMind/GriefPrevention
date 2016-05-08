@@ -38,9 +38,7 @@ import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
-import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -935,90 +933,6 @@ public class EntityEventHandler implements Listener
 				{
 					playerData.lastClaim = claim;
 				}						
-			}
-		}
-	}
-	
-	//when a splash potion effects one or more entities...
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-    public void onPotionSplash (PotionSplashEvent event)
-	{
-		if (!GriefPrevention.legacy164) {
-			ThrownPotion potion = event.getPotion();
-
-			//ignore potions not thrown by players
-			ProjectileSource projectileSource = potion.getShooter();
-			if (projectileSource == null || !(projectileSource instanceof Player)) return;
-			Player thrower = (Player) projectileSource;
-
-			Collection<PotionEffect> effects = potion.getEffects();
-			for (PotionEffect effect : effects) {
-				PotionEffectType effectType = effect.getType();
-				//restrict some potions on claimed animals (griefers could use this to kill or steal animals over fences)
-				if (effectType.getName().equals("JUMP") || effectType.getName().equals("POISON")) {
-					for (LivingEntity effected : event.getAffectedEntities()) {
-						Claim cachedClaim = null;
-						if (effected instanceof Animals) {
-							Claim claim = this.dataStore.getClaimAt(effected.getLocation(), false, cachedClaim);
-							if (claim != null) {
-								cachedClaim = claim;
-								if (claim.allowContainers(thrower) != null) {
-									event.setCancelled(true);
-									GriefPrevention.sendMessage(thrower, TextMode.Err, Messages.NoDamageClaimedEntity, claim.getOwnerName());
-									return;
-								}
-							}
-						}
-					}
-				}
-
-				//otherwise, no restrictions for positive effects
-				if (positiveEffects.contains(effectType)) continue;
-
-				for (LivingEntity effected : event.getAffectedEntities()) {
-					//always impact the thrower
-					if (effected == thrower) continue;
-
-					//always impact non players
-					if (!(effected instanceof Player)) continue;
-
-						//otherwise if in no-pvp zone, stop effect
-						//FEATURE: prevent players from engaging in PvP combat inside land claims (when it's disabled)
-					else if (GriefPrevention.instance.config_pvp_noCombatInPlayerLandClaims || GriefPrevention.instance.config_pvp_noCombatInAdminLandClaims) {
-						Player effectedPlayer = (Player) effected;
-						PlayerData defenderData = this.dataStore.getPlayerData(UUIDProvider.retrieve(effectedPlayer.getName()));
-						PlayerData attackerData = this.dataStore.getPlayerData(UUIDProvider.retrieve(thrower.getName()));
-						Claim attackerClaim = this.dataStore.getClaimAt(thrower.getLocation(), false, attackerData.lastClaim);
-						if (attackerClaim != null &&
-								(attackerClaim.isAdminClaim() && attackerClaim.parent == null && GriefPrevention.instance.config_pvp_noCombatInAdminLandClaims ||
-										attackerClaim.isAdminClaim() && attackerClaim.parent != null && GriefPrevention.instance.config_pvp_noCombatInAdminSubdivisions ||
-										!attackerClaim.isAdminClaim() && GriefPrevention.instance.config_pvp_noCombatInPlayerLandClaims)) {
-							attackerData.lastClaim = attackerClaim;
-							PreventPvPEvent pvpEvent = new PreventPvPEvent(attackerClaim);
-							Bukkit.getPluginManager().callEvent(pvpEvent);
-							if (!pvpEvent.isCancelled()) {
-								event.setIntensity(effected, 0);
-								GriefPrevention.sendMessage(thrower, TextMode.Err, Messages.CantFightWhileImmune);
-								continue;
-							}
-						}
-
-						Claim defenderClaim = this.dataStore.getClaimAt(effectedPlayer.getLocation(), false, defenderData.lastClaim);
-						if (defenderClaim != null &&
-								(defenderClaim.isAdminClaim() && defenderClaim.parent == null && GriefPrevention.instance.config_pvp_noCombatInAdminLandClaims ||
-										defenderClaim.isAdminClaim() && defenderClaim.parent != null && GriefPrevention.instance.config_pvp_noCombatInAdminSubdivisions ||
-										!defenderClaim.isAdminClaim() && GriefPrevention.instance.config_pvp_noCombatInPlayerLandClaims)) {
-							defenderData.lastClaim = defenderClaim;
-							PreventPvPEvent pvpEvent = new PreventPvPEvent(defenderClaim);
-							Bukkit.getPluginManager().callEvent(pvpEvent);
-							if (!pvpEvent.isCancelled()) {
-								event.setIntensity(effected, 0);
-								GriefPrevention.sendMessage(thrower, TextMode.Err, Messages.PlayerInPvPSafeZone);
-								continue;
-							}
-						}
-					}
-				}
 			}
 		}
 	}
